@@ -1,0 +1,128 @@
+Components Used:
+Arduino Uno
+Motor Driver Module (L298N)
+DC Motors for movement
+Ultrasonic Sensor (HC-SR04) for obstacle detection
+Soil Moisture Sensor to check soil conditions
+Relay Module to control the sprayer
+Water Pump/Sprayer
+Battery Pack for power
+Code Implementation:
+The following Arduino code enables the robot to move, detect obstacles, check soil moisture, and control pesticide spraying:
+
+cpp
+Copy
+Edit
+// Define motor control pins
+#define ENA 9
+#define IN1 8
+#define IN2 7
+#define IN3 6
+#define IN4 5
+#define ENB 10
+
+// Ultrasonic sensor pins
+#define TRIG_PIN 12
+#define ECHO_PIN 11
+
+// Soil moisture sensor pin
+#define SOIL_SENSOR A0
+
+// Sprayer relay pin
+#define SPRAYER 4
+
+void setup() {
+    // Motor control pins as output
+    pinMode(ENA, OUTPUT);
+    pinMode(IN1, OUTPUT);
+    pinMode(IN2, OUTPUT);
+    pinMode(IN3, OUTPUT);
+    pinMode(IN4, OUTPUT);
+    pinMode(ENB, OUTPUT);
+
+    // Ultrasonic sensor pins
+    pinMode(TRIG_PIN, OUTPUT);
+    pinMode(ECHO_PIN, INPUT);
+
+    // Soil sensor pin
+    pinMode(SOIL_SENSOR, INPUT);
+
+    // Sprayer relay pin
+    pinMode(SPRAYER, OUTPUT);
+    
+    Serial.begin(9600);
+}
+
+// Function to measure distance using ultrasonic sensor
+int getDistance() {
+    digitalWrite(TRIG_PIN, LOW);
+    delayMicroseconds(2);
+    digitalWrite(TRIG_PIN, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(TRIG_PIN, LOW);
+    int duration = pulseIn(ECHO_PIN, HIGH);
+    int distance = duration * 0.034 / 2; // Convert to cm
+    return distance;
+}
+
+// Function to move forward
+void moveForward() {
+    digitalWrite(IN1, HIGH);
+    digitalWrite(IN2, LOW);
+    digitalWrite(IN3, HIGH);
+    digitalWrite(IN4, LOW);
+    analogWrite(ENA, 150);
+    analogWrite(ENB, 150);
+}
+
+// Function to stop the robot
+void stopRobot() {
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, LOW);
+    digitalWrite(IN3, LOW);
+    digitalWrite(IN4, LOW);
+}
+
+// Function to spray pesticides
+void sprayPesticide() {
+    Serial.println("Spraying Pesticide...");
+    digitalWrite(SPRAYER, HIGH); // Turn on sprayer
+    delay(2000); // Spray for 2 seconds
+    digitalWrite(SPRAYER, LOW);  // Turn off sprayer
+}
+
+void loop() {
+    int distance = getDistance();
+    int soilMoisture = analogRead(SOIL_SENSOR);
+
+    Serial.print("Distance: ");
+    Serial.print(distance);
+    Serial.print(" cm, Soil Moisture: ");
+    Serial.println(soilMoisture);
+
+    // Check for obstacles
+    if (distance < 20) { 
+        stopRobot(); // Stop if an obstacle is detected
+        delay(1000);
+    } else {
+        moveForward();
+    }
+
+    // Check soil moisture and spray if needed
+    if (soilMoisture < 300) { // Adjust threshold as per requirement
+        sprayPesticide();
+    }
+
+    delay(500);
+}
+How It Works:
+The robot moves forward by default.
+If an obstacle is detected within 20 cm, it stops.
+The soil moisture sensor checks the moisture level:
+If the soil is too dry, the sprayer is activated.
+The sprayer turns on for 2 seconds when needed.
+The robot keeps checking and repeating the process.
+Next Steps & Enhancements
+Integrate Bluetooth/WiFi (ESP8266/NodeMCU) for remote control.
+Add GPS for precision spraying in large farms.
+Use AI (Image Processing via Raspberry Pi) for pest detection.
